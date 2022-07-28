@@ -9,8 +9,21 @@ namespace WPFMediaKit.DirectShow.MediaPlayers
     {
         private const string NO_PROPERTY_PAGE_FOUND = "No property page found.";
 
-        [DllImport("olepro32.dll", CharSet = CharSet.Unicode, ExactSpelling = true)]
-        private static extern int OleCreatePropertyFrame(IntPtr hwndOwner,
+        [DllImport("olepro32.dll", CharSet = CharSet.Unicode, EntryPoint = "OleCreatePropertyFrame")]
+        private static extern int OleCreatePropertyFrame32(IntPtr hwndOwner,
+                                                         int x,
+                                                         int y,
+                                                         string lpszCaption,
+                                                         int cObjects,
+                                                         [In, MarshalAs(UnmanagedType.Interface)] ref object ppUnk,
+                                                         int cPages,
+                                                         IntPtr pPageClsId,
+                                                         int lcid,
+                                                         int dwReserved,
+                                                         IntPtr pvReserved);
+
+        [DllImport("oleaut32.dll", CharSet = CharSet.Unicode, EntryPoint = "OleCreatePropertyFrame")]
+        private static extern int OleCreatePropertyFrame64(IntPtr hwndOwner,
                                                          int x,
                                                          int y,
                                                          string lpszCaption,
@@ -69,17 +82,34 @@ namespace WPFMediaKit.DirectShow.MediaPlayers
                 }
 
                 object objRef = m_specifyPropertyPages;
-                hr = OleCreatePropertyFrame(hWnd,
-                                            30, 
-                                            30, 
-                                            null, 
-                                            1,
-                                            ref objRef, 
-                                            cauuid.cElems, 
-                                            cauuid.pElems, 
-                                            0, 
-                                            0, 
-                                            IntPtr.Zero);
+                if (Environment.Is64BitProcess)
+                {
+                    hr = OleCreatePropertyFrame64(hWnd,
+                                                30,
+                                                30,
+                                                null,
+                                                1,
+                                                ref objRef,
+                                                cauuid.cElems,
+                                                cauuid.pElems,
+                                                0,
+                                                0,
+                                                IntPtr.Zero);
+                }
+                else
+                {
+                    hr = OleCreatePropertyFrame32(hWnd,
+                                                30,
+                                                30,
+                                                null,
+                                                1,
+                                                ref objRef,
+                                                cauuid.cElems,
+                                                cauuid.pElems,
+                                                0,
+                                                0,
+                                                IntPtr.Zero);
+                }
 
                 DsError.ThrowExceptionForHR(hr);
             }
